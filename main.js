@@ -7,7 +7,7 @@ const fs = require("fs");
 // Returns: string formatted as h:mm:ss
 // ============================================================
 
-// this helper function converts time in hh:mm:ss am or pm format to total seconds
+// helper function converts time in hh:mm:ss am or pm format to total seconds
 function toSeconds(time) {
     //      6:12:30    pm
         let [clock, period] = time.split(" "); // am w pm are seperated by space
@@ -25,6 +25,13 @@ function toSeconds(time) {
 
         return h * 3600 + m * 60 + s;
     }
+//helper function to reconvert seconds to h:mm:ss format
+function formatTime(totalSeconds) {
+    let h = Math.floor(totalSeconds / 3600);
+    let m = Math.floor((totalSeconds % 3600) / 60);
+    let s = totalSeconds % 60;
+    return h + ":" + String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+}
 function getShiftDuration(startTime, endTime) {
     let start = toSeconds(startTime);
     let end = toSeconds(endTime);
@@ -35,13 +42,7 @@ function getShiftDuration(startTime, endTime) {
 
     let diff = end - start;
 
-    //reconvert to h:mm:ss format
-    let h = Math.floor(diff / 3600);
-    let m = Math.floor((diff % 3600) / 60);
-    let s = diff % 60;
-
-    //               first make it a string then use the pad method to add zeros on the left if needed
-    return h + ":" + String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+    return formatTime(diff);
 }
 
 // ============================================================
@@ -50,6 +51,8 @@ function getShiftDuration(startTime, endTime) {
 // endTime: (typeof string) formatted as hh:mm:ss am or hh:mm:ss pm
 // Returns: string formatted as h:mm:ss
 // ============================================================
+
+//
 function getIdleTime(startTime, endTime) {
     // TODO: Implement this function
 }
