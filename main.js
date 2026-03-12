@@ -25,7 +25,16 @@ function toSeconds(time) {
 
         return h * 3600 + m * 60 + s;
     }
-//helper function to reconvert seconds to h:mm:ss format
+    //another helper but for formats like hh:mm:ss without am or pm
+function toSecondsNoPeriod(time) {
+        let parts = time.split(":");
+ 
+        let h = parseInt(parts[0]);
+        let m = parseInt(parts[1]);
+        let s = parseInt(parts[2]);
+        return h * 3600 + m * 60 + s;
+    }
+//helper function to reconvert seconds to h:mm:ss format + adding zeros to the left 
 function formatTime(totalSeconds) {
     let h = Math.floor(totalSeconds / 3600);
     let m = Math.floor((totalSeconds % 3600) / 60);
@@ -87,7 +96,11 @@ function getIdleTime(startTime, endTime) {
 // Returns: string formatted as h:mm:ss
 // ============================================================
 function getActiveTime(shiftDuration, idleTime) {
-    // TODO: Implement this function
+    
+if(idleTime === "0:00:00") return shiftDuration; // edge case if there is no idle time
+     activeTime = toSecondsNoPeriod(shiftDuration) - toSecondsNoPeriod(idleTime);
+
+     return formatTime(activeTime);
 }
 
 // ============================================================
