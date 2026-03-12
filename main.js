@@ -7,27 +7,40 @@ const fs = require("fs");
 // Returns: string formatted as h:mm:ss
 // ============================================================
 
+// this helper function converts time in hh:mm:ss am or pm format to total seconds
 function toSeconds(time) {
-        let [clock, period] = time.split(" ");
-        let [h, m, s] = clock.split(":").map(Number);
+    //      6:12:30    pm
+        let [clock, period] = time.split(" "); // am w pm are seperated by space
+    //     [ "6", "12", "30"]   
+        let parts = clock.split(":");
 
+        //parts is an array of strings 
+        let h = parseInt(parts[0]);
+        let m = parseInt(parts[1]);
+        let s = parseInt(parts[2]);
+        
+        //24 hour conversion!!!
         if (period === "pm" && h !== 12) h += 12;
         if (period === "am" && h === 12) h = 0;
 
         return h * 3600 + m * 60 + s;
     }
 function getShiftDuration(startTime, endTime) {
- let start = toSeconds(startTime);
+    let start = toSeconds(startTime);
     let end = toSeconds(endTime);
-
+    // 7:30:30 am  -> 07:30:30
+    // 12:26:20 am -> 00:26:20
+    //if the shift goes past midnight, we need to add 24 hours *3600 to the end time
     if (end < start) end += 86400;
 
     let diff = end - start;
 
+    //reconvert to h:mm:ss format
     let h = Math.floor(diff / 3600);
     let m = Math.floor((diff % 3600) / 60);
     let s = diff % 60;
 
+    //               first make it a string then use the pad method to add zeros on the left if needed
     return h + ":" + String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
 }
 
