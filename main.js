@@ -41,6 +41,8 @@ function formatTime(totalSeconds) {
     let s = totalSeconds % 60;
     return h + ":" + String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
 }
+
+
 function getShiftDuration(startTime, endTime) {
     let start = toSeconds(startTime);
     let end = toSeconds(endTime);
@@ -96,7 +98,7 @@ function getIdleTime(startTime, endTime) {
 // Returns: string formatted as h:mm:ss
 // ============================================================
 function getActiveTime(shiftDuration, idleTime) {
-    
+
 if(idleTime === "0:00:00") return shiftDuration; // edge case if there is no idle time
      activeTime = toSecondsNoPeriod(shiftDuration) - toSecondsNoPeriod(idleTime);
 
@@ -110,7 +112,16 @@ if(idleTime === "0:00:00") return shiftDuration; // edge case if there is no idl
 // Returns: boolean
 // ============================================================
 function metQuota(date, activeTime) {
-    // TODO: Implement this function
+    
+    const dailyQuota = 8 * 3600 + 24 * 60; // 8 hours and 24 minutes in seconds
+    const eidQuota = 6 * 3600; // 6 hours in seconds
+
+    let [year, month, day] = date.split("-");
+
+    if(month === "04" && (day >= "10" && day <= "30")) {
+        return toSecondsNoPeriod(activeTime) >= eidQuota;
+    }
+    return toSecondsNoPeriod(activeTime) >= dailyQuota;
 }
 
 // ============================================================
