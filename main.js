@@ -54,7 +54,30 @@ function getShiftDuration(startTime, endTime) {
 
 //
 function getIdleTime(startTime, endTime) {
-    // TODO: Implement this function
+
+    const deliveryStart = 8 * 3600;   // 8am in seconds
+    const deliveryEnd   = 22 * 3600;  // 10pm in seconds
+
+    let shiftStart = toSeconds(startTime);
+    let shiftEnd   = toSeconds(endTime);
+
+    // before 8 am
+    let before = 0;
+    //handle edge case if the shift actually starts after 8 am
+    if (shiftStart < deliveryStart) {
+        //edge case driver clocks out before deliveries even start so we need to calculate idle time from shift start to shift end
+        before = Math.min(deliveryStart, shiftEnd) - shiftStart;
+    }
+
+    // after 10 pm
+    let after = 0;
+    //handle edge case if the shift ends before 10 pm
+    if (shiftEnd > deliveryEnd) {
+        // edge case driver clocks in after deliveries end so we need to calculate idle time from shift start to shift end
+        after = shiftEnd - Math.max(deliveryEnd, shiftStart);
+    }
+
+    return formatTime(before + after);
 }
 
 // ============================================================
