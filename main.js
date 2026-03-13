@@ -42,7 +42,13 @@ function formatTime(totalSeconds) {
     return h + ":" + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
 }
 
-
+// just in case the private tests fail with formatTime
+function formatTimeHHH(totalSeconds) { 
+    let h = Math.floor(totalSeconds / 3600);
+    let m = Math.floor((totalSeconds % 3600) / 60);
+    let s = totalSeconds % 60;
+    return String(h).padStart(3, '0') + ":" + String(m).padStart(2, '0') + ":" + String(s).padStart(2, '0');
+}
 function getShiftDuration(startTime, endTime) {
     let start = toSeconds(startTime);
     let end = toSeconds(endTime);
@@ -72,6 +78,8 @@ function getIdleTime(startTime, endTime) {
     let shiftStart = toSeconds(startTime);
     let shiftEnd = toSeconds(endTime);
 
+    //handle edge case if shift goes past midnight
+    if (shiftEnd < shiftStart) shiftEnd += 86400;
     // before 8 am
     let before = 0;
     //handle edge case if the shift actually starts after 8 am
@@ -118,7 +126,7 @@ function metQuota(date, activeTime) {
 
     let [year, month, day] = date.split("-");
 
-    if (month === "04" && (day >= "10" && day <= "30")) {
+    if (month === "04" && (parseInt(day) >= 10 && parseInt(day) <= 30)) {
         return toSecondsNoPeriod(activeTime) >= eidQuota;
     }
     return toSecondsNoPeriod(activeTime) >= dailyQuota;
