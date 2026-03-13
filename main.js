@@ -10,7 +10,7 @@ const fs = require("fs");
 // helper function converts time in hh:mm:ss am or pm format to total seconds
 function toSeconds(time) {
     //      6:12:30    pm
-    let [clock, period] = time.split(" "); // am w pm are seperated by space
+    let [clock, period] = time.trim().split(" "); // am w pm are seperated by space
     //     [ "6", "12", "30"]   
     let parts = clock.split(":");
 
@@ -27,7 +27,7 @@ function toSeconds(time) {
 }
 //another helper but for formats like hh:mm:ss without am or pm
 function toSecondsNoPeriod(time) {
-    let parts = time.split(":");
+    let parts = time.trim().split(":");
 
     let h = parseInt(parts[0]);
     let m = parseInt(parts[1]);
@@ -74,6 +74,10 @@ function getIdleTime(startTime, endTime) {
 
     //handle edge case if shift goes past midnight
     if (shiftEnd < shiftStart) shiftEnd += 86400;
+    //entireeeeee shift is outside delivery
+    if (shiftEnd <= deliveryStart || shiftStart >= deliveryEnd) {
+    return formatTime(shiftEnd - shiftStart);
+}
     // before 8 am
     let before = 0;
     //handle edge case if the shift actually starts after 8 am
@@ -102,7 +106,9 @@ function getIdleTime(startTime, endTime) {
 function getActiveTime(shiftDuration, idleTime) {
 
     if (idleTime === "0:00:00") return shiftDuration; // edge case if there is no idle time
-    activeTime = toSecondsNoPeriod(shiftDuration) - toSecondsNoPeriod(idleTime);
+
+    //another edge case if idle time more than shift duration (masalan idle = 3 w shift = 2), so i dont have negative
+    let activeTime = Math.max(0,toSecondsNoPeriod(shiftDuration) - toSecondsNoPeriod(idleTime));
 
     return formatTime(activeTime);
 }
@@ -141,7 +147,7 @@ function addShiftRecord(textFile, shiftObj) {
     for (let row of rows) {
         let cols = row.split(",");
         if (!cols[0]) continue;//skip empty line
-        if (cols[0] === shiftObj.driverID && cols[2] === shiftObj.date) {
+        if (cols[0].trim() === shiftObj.driverID && cols[2].trim() === shiftObj.date) {
             return {};
         }
     }
@@ -205,7 +211,7 @@ function setBonus(textFile, driverID, date, newValue) {
     for (let i = 0; i < rows.length; i++) {
         let cols = rows[i].split(",");
         if (!cols[0]) continue;
-        if (cols[0] === driverID && cols[2] === date) {
+        if (cols[0].trim() === driverID && cols[2].trim() === date) {
             cols[9] = newValue;
             rows[i] = cols.join(",");
         }
@@ -236,7 +242,7 @@ function countBonusPerMonth(textFile, driverID, month) {
             let rowMonth = cols[2].split("-")[1]; //extract month first!!!!
 
             //                                                  for \n
-            if (parseInt(rowMonth) === parseInt(month) && cols[9].trim() === "true") {
+            if (parseInt(rowMonth.trim()) === parseInt(month) && cols[9].trim() === "true") {
                 count++;
             }
         }
@@ -303,6 +309,7 @@ function getRequiredHoursPerMonth(textFile, rateFile, bonusCount, driverID, mont
 //loop through shifts on the given month
     for (let row of rows) {
         let cols = row.split(",");
+        if (!cols[0]) continue;
         if (cols[0] === driverID) {
             let rowMonth = cols[2].split("-")[1];
             if (parseInt(rowMonth) === parseInt(month)) {
@@ -315,8 +322,9 @@ function getRequiredHoursPerMonth(textFile, rateFile, bonusCount, driverID, mont
 
                 //calculating the hours part
                 //mara wa7da to a number
-                let [rowYear, rowMonth, rowDay] = cols[2].split("-").map(Number);
-                if (rowYear === 2025 && rowMonth === 4 && rowDay >= 10 && rowDay <= 30) {
+                let [rowYear, rowMonthNum, rowDay] = cols[2].split("-").map(Number);
+
+                if (rowYear === 2025 && rowMonthNum === 4 && rowDay >= 10 && rowDay <= 30) {
                     totalSeconds += 6 * 3600; 
                 } else {
                     totalSeconds += 8 * 3600 + 24 * 60; 
@@ -324,6 +332,9 @@ function getRequiredHoursPerMonth(textFile, rateFile, bonusCount, driverID, mont
             }
         }
     }
+
+    //in case dayOff is null because driverID not found in driverRates.txt
+        if (!dayOff) return "0:00:00";
 
     // Subtract 2 hours per bonus
     totalSeconds -= bonusCount * 2 * 3600;
@@ -354,11 +365,14 @@ function getNetPay(driverID, actualHours, requiredHours, rateFile) {
             break;
         }
     }
+    if (!tier) return 0;//driver doesnt exist in rate file
 
     //check if actual hours are less than required hours
     if (toSecondsNoPeriod(actualHours) >= toSecondsNoPeriod(requiredHours)) {
         return basePay;
     }
+
+
 
     let allowedMissingHours=0;
     switch (tier) {
@@ -383,7 +397,9 @@ function getNetPay(driverID, actualHours, requiredHours, rateFile) {
     //                 make sure its full hours by rounding down
     let salaryDeduction = Math.floor(actualMissing / 3600) * deductionRatePerHour;
 
-    return basePay - salaryDeduction;
+
+    //edge case if deduction is more than base pay 
+     return Math.max(0, basePay - salaryDeduction);
 }
 
 module.exports = {
