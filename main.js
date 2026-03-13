@@ -42,13 +42,7 @@ function formatTime(totalSeconds) {
     return h + ":" + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
 }
 
-// just in case the private tests fail with formatTime
-function formatTimeHHH(totalSeconds) { 
-    let h = Math.floor(totalSeconds / 3600);
-    let m = Math.floor((totalSeconds % 3600) / 60);
-    let s = totalSeconds % 60;
-    return String(h).padStart(3, '0') + ":" + String(m).padStart(2, '0') + ":" + String(s).padStart(2, '0');
-}
+
 function getShiftDuration(startTime, endTime) {
     let start = toSeconds(startTime);
     let end = toSeconds(endTime);
