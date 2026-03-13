@@ -280,7 +280,7 @@ function getRequiredHoursPerMonth(textFile, rateFile, bonusCount, driverID, mont
     let rows = shiftContent.split("\n");
     let rateRows = rateContent.split("\n");
 
-    // Get drivers dayOFF from driverRtates.txt 
+    // Get drivers dayOFF from driverRates.txt 
        let dayOff = null;
     for (let row of rateRows) {
         let cols = row.split(",");
@@ -332,7 +332,50 @@ function getRequiredHoursPerMonth(textFile, rateFile, bonusCount, driverID, mont
 // Returns: integer (net pay)
 // ============================================================
 function getNetPay(driverID, actualHours, requiredHours, rateFile) {
-    // TODO: Implement this function
+    let rateContent = fs.readFileSync(rateFile, "utf-8");
+    let rateRows = rateContent.split("\n");
+
+    //get basePay and tier
+    let basePay = 0;
+    let tier = null;
+    for (let row of rateRows) {
+        let cols = row.split(",");
+        if (cols[0] === driverID) {
+            basePay = parseInt(cols[2].trim());
+            tier = cols[3].trim();
+            break;
+        }
+    }
+
+    //check if actual hours are less than required hours
+    if (toSecondsNoPeriod(actualHours) >= toSecondsNoPeriod(requiredHours)) {
+        return basePay;
+    }
+
+    let allowedMissingHours=0;
+    switch (tier) {
+        case "1":
+            allowedMissingHours=50;
+            break;
+        case "2":
+            allowedMissingHours=20;
+            break;
+        case "3":
+            allowedMissingHours=10;
+            break;
+        case "4":
+            allowedMissingHours=3;  
+    }
+
+    let deductionRatePerHour = Math.floor(basePay / 185);
+    let missingHoursInSeconds = toSecondsNoPeriod(requiredHours) - toSecondsNoPeriod(actualHours);
+    //                 negative hours fix
+    let actualMissing = Math.max(0, missingHoursInSeconds - allowedMissingHours * 3600);
+
+    //                 make sure its full hours by rounding down
+    let salaryDeduction = Math.floor(actualMissing / 3600) * deductionRatePerHour;
+
+    return basePay - salaryDeduction;
 }
 
 module.exports = {
