@@ -274,7 +274,53 @@ function getTotalActiveHoursPerMonth(textFile, driverID, month) {
 // Returns: string formatted as hhh:mm:ss
 // ============================================================
 function getRequiredHoursPerMonth(textFile, rateFile, bonusCount, driverID, month) {
-    // TODO: Implement this function
+    let shiftContent = fs.readFileSync(textFile, "utf-8");
+    let rateContent = fs.readFileSync(rateFile, "utf-8");
+    
+    let rows = shiftContent.split("\n");
+    let rateRows = rateContent.split("\n");
+
+    // Get drivers dayOFF from driverRtates.txt 
+       let dayOff = null;
+    for (let row of rateRows) {
+        let cols = row.split(",");
+        if (cols[0] === driverID) {
+            dayOff = cols[1].trim();
+            break;
+        }
+    }
+
+    const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+    let totalSeconds = 0;
+//loop through shifts on the given month
+    for (let row of rows) {
+        let cols = row.split(",");
+        if (cols[0] === driverID) {
+            let rowMonth = cols[2].split("-")[1];
+            if (parseInt(rowMonth) === parseInt(month)) {
+                //all this does is just know what day the date of the shift respresents
+                let shiftDate = new Date(cols[2]);
+                let shiftDayName = DAYS[shiftDate.getDay()];
+
+                if (shiftDayName === dayOff) continue; 
+
+
+                //calculating the hours part
+                //mara wa7da to a number
+                let [year, month, day] = cols[2].split("-").map(Number);
+                if (year === 2025 && month === 4 && day >= 10 && day <= 30) {
+                    totalSeconds += 6 * 3600; 
+                } else {
+                    totalSeconds += 8 * 3600 + 24 * 60; 
+                }
+            }
+        }
+    }
+
+    // Subtract 2 hours per bonus
+    totalSeconds -= bonusCount * 2 * 3600;
+    return formatTime(totalSeconds);
 }
 
 // ============================================================
