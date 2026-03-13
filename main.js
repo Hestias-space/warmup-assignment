@@ -140,6 +140,7 @@ function addShiftRecord(textFile, shiftObj) {
     //CHECK FOR DUPLICATE with id w dateeee
     for (let row of rows) {
         let cols = row.split(",");
+        if (!cols[0]) continue;//skip empty line
         if (cols[0] === shiftObj.driverID && cols[2] === shiftObj.date) {
             return {};
         }
@@ -203,6 +204,7 @@ function setBonus(textFile, driverID, date, newValue) {
 
     for (let i = 0; i < rows.length; i++) {
         let cols = rows[i].split(",");
+        if (!cols[0]) continue;
         if (cols[0] === driverID && cols[2] === date) {
             cols[9] = newValue;
             rows[i] = cols.join(",");
@@ -228,6 +230,7 @@ function countBonusPerMonth(textFile, driverID, month) {
 
     for (let row of rows) {
         let cols = row.split(",");
+        if (!cols[0]) continue;
         if (cols[0] === driverID) {
             driverFound = true;
             let rowMonth = cols[2].split("-")[1]; //extract month first!!!!
@@ -256,6 +259,7 @@ function getTotalActiveHoursPerMonth(textFile, driverID, month) {
 
     for (let row of rows) {
         let cols = row.split(",");
+        if (!cols[0]) continue;
         if (cols[0] === driverID) {
             let rowMonth = cols[2].split("-")[1]; 
             if (parseInt(rowMonth) === parseInt(month) ) {
@@ -286,6 +290,7 @@ function getRequiredHoursPerMonth(textFile, rateFile, bonusCount, driverID, mont
        let dayOff = null;
     for (let row of rateRows) {
         let cols = row.split(",");
+        if (!cols[0]) continue;
         if (cols[0] === driverID) {
             dayOff = cols[1].trim();
             break;
@@ -310,8 +315,8 @@ function getRequiredHoursPerMonth(textFile, rateFile, bonusCount, driverID, mont
 
                 //calculating the hours part
                 //mara wa7da to a number
-                let [year, month, day] = cols[2].split("-").map(Number);
-                if (year === 2025 && month === 4 && day >= 10 && day <= 30) {
+                let [rowYear, rowMonth, rowDay] = cols[2].split("-").map(Number);
+                if (rowYear === 2025 && rowMonth === 4 && rowDay >= 10 && rowDay <= 30) {
                     totalSeconds += 6 * 3600; 
                 } else {
                     totalSeconds += 8 * 3600 + 24 * 60; 
@@ -342,6 +347,7 @@ function getNetPay(driverID, actualHours, requiredHours, rateFile) {
     let tier = null;
     for (let row of rateRows) {
         let cols = row.split(",");
+            if (!cols[0]) continue;
         if (cols[0] === driverID) {
             basePay = parseInt(cols[2].trim());
             tier = cols[3].trim();
